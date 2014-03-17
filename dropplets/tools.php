@@ -94,6 +94,15 @@ if (!isset($_SESSION['user'])) { ?>
                         <input type="password" name="password" id="password" value="">
                     </div>
                 </div>
+            
+                <div class="dp-row dp-editable">
+                    <div class="dp-icon dp-icon-edit"></div>
+                    
+                    <div class="dp-content">
+                        <label>Header Background Color</label>
+                        <input type="text" name="header_background_color" id="header_background_color" value="<?php echo HEADER_BACKGROUND_COLOR; ?>">
+                    </div>
+                </div>
             </div>
             
             <div class="dp-row">

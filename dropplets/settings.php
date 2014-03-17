@@ -34,6 +34,7 @@ define('HEADER_INJECT', stripslashes($header_inject));
 define('FOOTER_INJECT', stripslashes($footer_inject));
 define('ACTIVE_TEMPLATE', $template);
 define('SHOW_TEMPLATES', $show_templates);
+define('HEADER_BACKGROUND_COLOR', $header_background_color);
 
 /*-----------------------------------------------------------------------------------*/
 /* Definitions (These Should Be Moved to "Settings")

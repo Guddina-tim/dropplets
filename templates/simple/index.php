@@ -17,8 +17,7 @@
     </head>
 
     <body>
-        <?php if($is_home) { ?>
-        <article>
+        <article style="background-color:<?php echo HEADER_BACKGROUND_COLOR; ?>;">
             <div class="row">
                 <div class="one-quarter meta">
                     <div class="thumbnail">
@@ -42,7 +41,6 @@
                 </div>
             </div>
         </article>
-        <?php } ?>
         
         <?php echo($content); ?>
         
