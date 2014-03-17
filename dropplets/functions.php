@@ -141,6 +141,14 @@ function get_all_posts($options = array()) {
 
                 // Define the post category.
                 $post_category = str_replace(array("\n", '-'), '', $fcontents[4]);
+				
+				// Get the posts tags.
+				$post_tags = explode(',', trim(str_replace(array("\n", '-'), '', $fcontents[6])));
+				$post_tags = array_map('trim', $post_tags);
+
+				if($options['tag'] && !in_array($options["tag"], $post_tags)) {
+					continue;
+				}
 
                 // Early return if we only want posts from a certain category
                 if($options["category"] && $options["category"] != trim(strtolower($post_category))) {
@@ -151,18 +159,19 @@ function get_all_posts($options = array()) {
                 $post_status = str_replace(array("\n", '- '), '', $fcontents[5]);
 
                 // Define the post intro.
-                $post_intro = Markdown($fcontents[7]);
+                $post_intro = Markdown($fcontents[8]);
 
                 // Define the post content
-                $post_content = Markdown(join('', array_slice($fcontents, 6, $fcontents.length -1)));
+                $post_content = Markdown(join('', array_slice($fcontents, 8, $fcontents.length -1)));
 
                 // Pull everything together for the loop.
-                $files[] = array('fname' => $entry, 'post_title' => $post_title, 'post_author' => $post_author, 'post_author_twitter' => $post_author_twitter, 'post_date' => $post_date, 'post_category' => $post_category, 'post_status' => $post_status, 'post_intro' => $post_intro, 'post_content' => $post_content);
+                $files[] = array('fname' => $entry, 'post_title' => $post_title, 'post_author' => $post_author, 'post_author_twitter' => $post_author_twitter, 'post_date' => $post_date, 'post_category' => $post_category, 'post_tags' => $post_tags, 'post_status' => $post_status, 'post_intro' => $post_intro, 'post_content' => $post_content);
                 $post_dates[] = $post_date;
                 $post_titles[] = $post_title;
                 $post_authors[] = $post_author;
                 $post_authors_twitter[] = $post_author_twitter;
                 $post_categories[] = $post_category;
+                $post_tags[] = $post_tags;
                 $post_statuses[] = $post_status;
                 $post_intros[] = $post_intro;
                 $post_contents[] = $post_content;
@@ -177,31 +186,21 @@ function get_all_posts($options = array()) {
 }
 
 /*-----------------------------------------------------------------------------------*/
+/* Get Posts for Selected Tag
+/*-----------------------------------------------------------------------------------*/
+
+function get_posts_for_tag($tag) {
+    $tag = trim(strtolower($tag));
+    return get_all_posts(array("tag" => $tag));
+}
+
+/*-----------------------------------------------------------------------------------*/
 /* Get Posts for Selected Category
 /*-----------------------------------------------------------------------------------*/
 
 function get_posts_for_category($category) {
     $category = trim(strtolower($category));
     return get_all_posts(array("category" => $category));
-}
-
-/*-----------------------------------------------------------------------------------*/
-/* Get Image for a Post
-/*-----------------------------------------------------------------------------------*/
-function get_post_image_url($filename)
-{
-    global $blog_url;
-    $supportedFormats = array( "jpg", "png", "gif" );
-    $slug = pathinfo($filename, PATHINFO_FILENAME);
-
-    foreach($supportedFormats as $fmt)
-    {
-        $imgFile = sprintf("%s%s.%s", POSTS_DIR, $slug, $fmt);
-        if (file_exists($imgFile))
-            return sprintf("%s/%s.%s", "${blog_url}posts", $slug, $fmt);
-    }
-
-    return false;
 }
 
 /*-----------------------------------------------------------------------------------*/
@@ -316,8 +315,6 @@ $currentpage .= $_SERVER["REQUEST_URI"];
 // If is home.
 $is_home = ($homepage==$currentpage);
 define('IS_HOME', $is_home);
-define('IS_CATEGORY', (bool)strstr($_SERVER['REQUEST_URI'], '/category/'));
-define('IS_SINGLE', !(IS_HOME || IS_CATEGORY));
 
 /*-----------------------------------------------------------------------------------*/
 /* Get Profile Image
@@ -326,18 +323,13 @@ define('IS_SINGLE', !(IS_HOME || IS_CATEGORY));
 function get_twitter_profile_img($username) {
 	
 	// Get the cached profile image.
-    $cache = IS_CATEGORY ? '.' : '';
-    $array = split('/category/', $_SERVER['REQUEST_URI']);
-    $array = split('/', $array[1]);
-    if(count($array)!=1) $cache .= './.';
-    $cache .= './cache/';
-	$profile_image = $cache.$username.'.jpg';
-
+	$profile_image = './cache/'.$username.'.jpg';
+	
 	// Cache the image if it doesn't already exist.
 	if (!file_exists($profile_image)) {
 	    $image_url = 'http://dropplets.com/profiles/?id='.$username.'';
 	    $image = file_get_contents($image_url);
-	    file_put_contents($cache.$username.'.jpg', $image);
+	    file_put_contents('./cache/'.$username.'.jpg', $image);
 	}
 	
 	// Return the image URL.
@@ -380,9 +372,9 @@ function get_header() { ?>
 
 function get_footer() { ?>
     <!-- jQuery & Required Scripts -->
-    <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
     
-    <?php if (!IS_SINGLE && PAGINATION_ON_OFF !== "off") { ?>
+    <?php if (PAGINATION_ON_OFF !== "off") { ?>
     <!-- Post Pagination -->
     <script>
         var infinite = true;
@@ -393,10 +385,6 @@ function get_footer() { ?>
             function load_next_page() {
                 $.ajax({
                     url: "index.php?page=" + next_page,
-                    beforeSend: function () {
-                        $('body').append('<article class="loading-frame"><div class="row"><div class="one-quarter meta"></div><div class="three-quarters"><img src="./templates/<?php echo(ACTIVE_TEMPLATE); ?>/loading.gif" alt="Loading"></div></div></article>');
-                        $("body").animate({ scrollTop: $("body").scrollTop() + 250 }, 1000);
-                    },
                     success: function (res) {
                         next_page++;
                         var result = $.parseHTML(res);
@@ -404,17 +392,11 @@ function get_footer() { ?>
                             return $(this).is('article');
                         });
                         if (articles.length < 2) {  //There's always one default article, so we should check if  < 2
-                            $('.loading-frame').html('You\'ve reached the end of this list.');
                             no_more_posts = true;
                         }  else {
-                            $('.loading-frame').remove();
-                            $('body').append(articles);
+                            $('body').append(articles.slice(1));
                         }
                         loading = false;
-                    },
-                    error: function() {
-                        $('.loading-frame').html('An error occurred while loading posts.');
-                        //keep loading equal to false to avoid multiple loads. An error will require a manual refresh
                     }
                 });
             }
