@@ -179,12 +179,13 @@ if (!isset($_SESSION['user'])) { ?>
             
             <div class="dp-row">
                 <div class="dp-icon dp-icon-code"></div>
-                <div class="dp-content">Code Injection</div>                
-                <a class="dp-link dp-toggle" href="#dp-injection"></a>
+                <div class="dp-content">Advanced</div>                
+                <a class="dp-link dp-toggle" href="#dp-advanced"></a>
                 <button class="dp-button dp-button-submit" type="submit" name="submit" value="submit">k</button>
             </div>
             
-            <div class="dp-sub-panel" id="dp-injection">
+            <div class="dp-sub-panel" id="dp-advanced">
+            
                 <div class="dp-row dp-editable">
                     <div class="dp-icon dp-icon-edit"></div>
                     
@@ -202,9 +203,23 @@ if (!isset($_SESSION['user'])) { ?>
                         <textarea class="dp-code" name="footer_inject" id="footer_inject" rows="12"><?php echo FOOTER_INJECT; ?></textarea>
                     </div>
                 </div>
+                
+				<div class="dp-row dp-editable">
+			   		<div class="dp-icon dp-icon-edit"></div>
+                    
+                   	 <div class="dp-content">
+                     	   <label>Show Templates?</label>
+					 	   <br />
+					 	   Yes <input type="radio" name="show_templates" id="show_templates_yes" value="1">   
+					 	   No <input type="radio" name="show_templates" id="show_templates_no" value="0">
+					 	   <br /><span style="font-size:75%;">"No" may increase page speed.</span>
+					 </div>
+				</div>
             </div>
+            
         </form>
         
+        <?php if (SHOW_TEMPLATES) : ?>
         <div class="dp-row">
             <div class="dp-icon dp-icon-large dp-icon-grid"></div>
             <div class="dp-content">Installed Templates</div>        
@@ -255,7 +270,9 @@ if (!isset($_SESSION['user'])) { ?>
                 <?php get_premium_templates('all'); ?>
             </div>
         </div>
-        
+        <?php endif; ?>
+            
+            
         <div class="dp-row">
             <div class="dp-icon dp-icon-large dp-icon-question"></div>
             <div class="dp-content">Need Some Help?</div>
